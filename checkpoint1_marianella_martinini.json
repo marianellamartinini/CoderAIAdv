@@ -1,0 +1,322 @@
+{
+  "name": "Clase 1 Adv - Configuracion e interfaces agenticas",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3df37ee6-9ade-40f0-998f-39a489f9d891",
+      "name": "When chat message received",
+      "webhookId": "65f1a667-bd5f-4e5b-8072-60a4eb788b48"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# ROL Y PERFIL CORPORATIVO\nEres el Asistente Oficial de Calificación y Triaje de Leads. Tu función es consultar la base de datos de clientes y registrar nuevas oportunidades.\n\n# OBJETIVOS DE LA SESIÓN\n- Si el usuario consulta por un registro, invoca la herramienta Buscar_lead.\n- Si el usuario proporciona datos de un nuevo cliente, invoca la herramienta Registrar_lead.\n\n# REGLAS Y RESTRICCIONES\n- Queda estrictamente prohibido el uso de lenguaje inclusivo o informal.\n- Responde de forma directa, breve y profesional.\n",
+          "maxIterations": 9
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "31598a27-a0de-4f81-835b-2fb18155539d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        304,
+        288
+      ],
+      "id": "dc66d163-e281-4a3a-a7e1-7713a4f12213",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Busca un lead en la planilla comercial \"Leads - Clase 1\" filtrando por la columna Email. Esá esta herramienta SIEMPRE antes de registrar un lead nuevo, para verificar si el email ya se encuentra registrado y evitar duplicados. También usala cuando el usuario pregunte si un contacto existe o pida datos de un lead. Devuelve la fila completa del lead (nombre, empresa, interés y fecha) o vacío si no existe.",
+        "documentId": {
+          "__rl": true,
+          "value": "1XKDvoePGJErj4Jc92iskv4ZS66OOOS_P2mq1qFCNtTQ",
+          "mode": "list",
+          "cachedResultName": "Calificación y triaje de leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XKDvoePGJErj4Jc92iskv4ZS66OOOS_P2mq1qFCNtTQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1020241129,
+          "mode": "list",
+          "cachedResultName": "Leads - Clase 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XKDvoePGJErj4Jc92iskv4ZS66OOOS_P2mq1qFCNtTQ/edit#gid=1020241129"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $fromAI('email','email exacto del lead a buscar en la plantilla','string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        464
+      ],
+      "id": "bc79e51b-973a-47e5-ba61-d65e2a58abe7",
+      "name": "Buscar_lead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uLCONFg7T1nUPujx",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Agrega una fila nueva en la planilla comercial \"Leads - Clase 1\". Usá esta herramienta UNICAMENTE después de haber verificado con buscar_lead que el email no existe. Requiere como mínimo: Email y Nombre; completá Empresa e interés si el usuario los mencionó, y Fecha con la fecha actual. ",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1XKDvoePGJErj4Jc92iskv4ZS66OOOS_P2mq1qFCNtTQ",
+          "mode": "list",
+          "cachedResultName": "Calificación y triaje de leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XKDvoePGJErj4Jc92iskv4ZS66OOOS_P2mq1qFCNtTQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1020241129,
+          "mode": "list",
+          "cachedResultName": "Leads - Clase 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XKDvoePGJErj4Jc92iskv4ZS66OOOS_P2mq1qFCNtTQ/edit#gid=1020241129"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nombre": "={{ $fromAI('Nombre','Nombre del lead, obligatorio','string') }}",
+            "email": "={{ $fromAI('email','email exacto del lead a buscar en la plantilla','string') }}",
+            "empresa": "={{ $fromAI('empresa','empresa del lead si fue mencionada','string') }}",
+            "interes": "={{ $fromAI('interes','producto o interes que menciono el lead','string') }}",
+            "fecha": "={{ $now.format('YYYY-MM-DD') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "empresa",
+              "displayName": "empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "interes",
+              "displayName": "interes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        368
+      ],
+      "id": "5bb35f23-7e25-4282-afaa-935807d0c72b",
+      "name": "Registrar_lead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uLCONFg7T1nUPujx",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Envia por Gmail el reporte de auditoria al supervisor humano. Usa esta herramienta una única vez al final de cada tarea completada, con un cuerpo que resuma: que pidió el usuario, qué herramienta usaste y cuál fue el resultado final",
+        "sendTo": "marianellamartinini@gmail.com",
+        "subject": "Agrente Triage - Tarea completada",
+        "emailType": "text",
+        "message": "={{ $fromAI('resumen', 'resumen de la tarea completada: que pidio el usuario, que herramientas se usaron y el resultado final', 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        192
+      ],
+      "id": "920bc051-a8c5-49fe-a93f-fb3ea41dd774",
+      "name": "log observabilidad",
+      "webhookId": "1d264598-9afb-4a4f-a0ab-ab6dc3355360",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "e9IF5GkDwNqYGL45",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "4214da19-95d0-41f0-bfdc-0e5cd40baa1a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6B3Ie99PVeNNCWbq",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar_lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar_lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "log observabilidad": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "69de0f8e-f9e9-423e-b3b1-da09cd0d73c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cfc2bd72af6fd35510388e6d86302690646c3221d9b3eea6490aca659f31bb04"
+  },
+  "id": "1eXJheQnxPvLJyIt",
+  "tags": []
+}
